@@ -1,0 +1,97 @@
+version: "3.7"
+
+services:
+  zookeeper:
+    ports:
+      - "2181:2181"
+    image: confluentinc/cp-zookeeper:5.4.4
+    environment:
+      ZOOKEEPER_DATA_DIR: /var/lib/zookeeper
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper
+
+  kafka-1:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "19092:19092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: INNER://kafka-1:9092,OUTER://localhost:19092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INNER:PLAINTEXT,OUTER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INNER
+      KAFKA_LOG_DIRS: /tmp/kafka-logs/
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka-1 -Dcom.sun.management.jmxremote.rmi.port=1099"
+      JMX_PORT: 1099
+    volumes:
+      - kafka-data-1
+  kafka-2:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: INNER://kafka-2:9092,OUTER://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INNER:PLAINTEXT,OUTER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INNER
+      KAFKA_LOG_DIRS: /tmp/kafka-logs/
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka-2 -Dcom.sun.management.jmxremote.rmi.port=1099"
+      JMX_PORT: 1099
+    volumes:
+      - kafka-data-2
+
+  cmak:
+    image: ghcr.io/eshepelyuk/dckr/cmak-3.0.0.5:latest
+    restart: always
+    ports:
+      - "9000:9000"
+    depends_on:
+      - zookeeper
+      - kafka-1
+    environment:
+      ZK_HOSTS: zookeeper:2181
+    volumes:
+      - cmak:/cmak
+
+  kadeck-db:
+    ports:
+      - "5434:5432"
+    image: postgres:12.6
+    restart: on-failure:3
+    volumes:
+      - type: volume
+        source: kadeck-data
+        target: /var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: "kadeckweb"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+
+  kadeck:
+    ports:
+      - "80:80"
+    image: xeotek/kadeck-allinone:latest
+    volumes:
+      - /Users/alekseev_m/volumes/kadeck:/certificates
+    environment:
+      xeotek_kadeck_home: "kadeckweb"
+      xeotek_kadeck_db_username: "postgres"
+      xeotek_kadeck_db_password: "postgres"
+      xeotek_kadeck_db_url: "jdbc:postgresql://kadeck-db:5432/kadeckweb"
+
+volumes:
+  kadeck-data:
+  zookeeper-data:
+  kafka-data-1:
+  kafka-data-2:
+  kafka-data-3:
+  cmak:
