@@ -1,6 +1,7 @@
 spring:
   kafka:
     producer:
-      bootstrap-servers: localhost:9092
+      bootstrap-servers: localhost:29092,localhost:39092
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    bootstrap-servers: localhost:29092,localhost:39092
