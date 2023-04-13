@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import ru.aasmc.wikimedia.config.props.AppKafkaProperties;
 import ru.aasmc.wikimedia.handler.WikimediaHandlerTopic;
 
 import java.net.URI;
@@ -18,13 +19,14 @@ import java.util.concurrent.TimeUnit;
 public class WikimediaProducer {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final AppKafkaProperties properties;
 
     @SneakyThrows
     public void sendMessage() {
         String topic = "wikimedia_recentchange";
 
         // to read realtime stream data from WikiMedia we use event source
-        EventHandler handler = new WikimediaHandlerTopic(kafkaTemplate, topic);
+        EventHandler handler = new WikimediaHandlerTopic(properties, kafkaTemplate, topic);
         String url = "https://stream.wikimedia.org/v2/stream/recentchange";
         EventSource.Builder builder = new EventSource.Builder(handler, URI.create(url));
         EventSource eventSource = builder.build();

@@ -5,10 +5,15 @@ import com.launchdarkly.eventsource.MessageEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
+import ru.aasmc.wikimedia.config.props.AppKafkaProperties;
 
 @Slf4j
 @RequiredArgsConstructor
 public class WikimediaHandlerTopic implements EventHandler {
+
+    private final AppKafkaProperties properties;
+
+    private int currentKeyIdx = 0;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final String topic;

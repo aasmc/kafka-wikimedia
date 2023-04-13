@@ -5,3 +5,8 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
     bootstrap-servers: localhost:29092,localhost:39092
+
+
+kafkaprops:
+  partitions: 4
+  replicas: 2
